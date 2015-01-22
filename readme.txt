@@ -1,9 +1,9 @@
-=== amCharts Responsive ===
+# amCharts Responsive
 
 Version: 0.9
 
 
-== Description ==
+## Description
 
 Use this plugin to enable "responsive" features for amCharts' JavaScript Charts,
 JavaScript Stock Chart, or JavaScript Maps.
@@ -28,32 +28,36 @@ You can modify those defaults rules, or make your own list. The plugin allows
 that. (see further down this file for instructions)
 
 
-== Usage ==
+## Usage
 
 1. Include the minified version of file of this plugin. I.e.: (this needs to go
 after all the other amCharts includes)
 
 2. Add the following setting to your chart configuration:
 
+```
 AmCharts.makeChart( "chartdiv", {
   ...,
   "responsive": {
     "enabled": true
   }
 } );
+```
 
 Or if you are using non-JSON setup:
 
+```
 chart.responsive = {
   "enabled": true
 };
+```
 
 That's it.
 
 
-== Advanced use ==
+## Advanced use
 
-= Rules =
+### Rules
 
 You can modify (or completely overwrite) the default responsive rules used by
 the plugin.
@@ -70,6 +74,7 @@ b) Overrides. (a set of properties to override for this particular rule)
 
 A rule is an object, for example:
 
+```
 {
   "minWidth": 200,
   "maxWidth": 400,
@@ -85,6 +90,7 @@ A rule is an object, for example:
     }
   }
 }
+```
 
 The above rule will be applicable to a chart that is between 200px and 400px in
 width and height.
@@ -95,6 +101,7 @@ least one.
 So for example to make the rule apply to all charts with width 400px or lower,
 you would do something like this:
 
+```
 {
   "maxWidth": 400,
   "overrides": {
@@ -107,6 +114,7 @@ you would do something like this:
     }
   }
 }
+```
 
 Please note that there are several other conditional properties besides the ones
 that deal with chart's dimensions:
@@ -127,14 +135,16 @@ types like object, or array.
 To override a property of a child object, such as "legend", you would simply go
 with JSON representation of the properties you need to override. I.e.:
 
+```
 "legend": {
   "enabled": false
 }
+```
 
 This will look for a "legend" property in chart object, then change it's
 "enabled" property to false.
 
-= Overriding arrays of objects =
+### Overriding arrays of objects
 
 Some objects in charts are collected in arrays, i.e. "graphs", "valueAxes", etc.
 
@@ -143,10 +153,12 @@ There are some ways to override their properties as well.
 To override properties for ALL objects in the array, you would provide an
 override instruction as an object. I.e.:
 
+```
 "graphs": {
   "bullet": "round",
   "lineThickness": 5
 }
+```
 
 The above will add a round bullet and set line thickness to all of the graphs on
 the chart.
@@ -160,6 +172,7 @@ b) Apply using the same index.
 To individually apply property overrides, you will need to supply override
 instructions as an array:
 
+```
 "graphs": [
   {
     "id": "g1",
@@ -167,6 +180,7 @@ instructions as an array:
     "lineThickness": 5
   }
 ]
+```
 
 The above will apply the same properties for the graph with an id of "g1" only.
 It will not touch the rest of the graphs.
@@ -177,6 +191,7 @@ the "id" property set so this plugin can target it.
 Or you can omit the "id" and just apply overrides in the same order as you have
 them defined. I.e.:
 
+```
 "graphs": [
   {
     "bullet": "round"
@@ -185,11 +200,12 @@ them defined. I.e.:
     "bullet": "square"
   }
 ]
+```
 
 The above will apply round bullets to the first defined graph, and square
 bullets to the second graph.
 
-= Chaining multiple rules =
+### Chaining multiple rules
 
 The cool pat is that you can daisy-chain the override rules, much like in CSS.
 
@@ -199,6 +215,7 @@ are defined.
 
 Consider this rule set:
 
+```
 "responsive": {
   "enabled": true,
   "rules": [
@@ -235,16 +252,18 @@ Consider this rule set:
 
   ]
 }
+```
 
 In case several rules modify the same property, the last one will always "win".
 
-= Combining custom rules with pre-defined ones =
+### Combining custom rules with pre-defined ones
 
 The plugin will combine your custom rules with pre-defined ones automatically.
 
 In case you want to go pure and set only your own responsive rules, you can set
 property "addDefaultRules" to false. I.e.:
 
+```
 "responsive": {
   "enabled": true,
   "addDefaultRules": false,
@@ -259,13 +278,14 @@ property "addDefaultRules" to false. I.e.:
     }
   ]
 }
+```
 
 When your custom rules are combined with pre-defined ones, yours are appended at
 the end of the list. This means that your rules will always have the "last
 word".
 
 
-== Requirements ==
+### Requirements
 
 This plugin requires at least 3.13 version of JavaScript Charts, JavaScript
 Stock Chart or JavaScript Maps.
@@ -274,7 +294,7 @@ Any older versions will be ignored by this plugin. The charts will function but
 no responsive rules will be applied to them.
 
 
-== Extending this plugin ==
+## Extending this plugin
 
 You're encouraged to modify, extend and make derivative plugins out of this
 plugin.
@@ -288,7 +308,7 @@ We're curious types. Please let us know (contact@amcharts.com) if you do create
 something new out of this plugin.
 
 
-== License ==
+## License
 
 This plugin is licensed under Apache License 2.0.
 
@@ -300,7 +320,7 @@ Please see attached file "license.txt" for the complete license or online here:
 http://www.apache.org/licenses/LICENSE-2.0
 
 
-== Contact us ==
+## Contact us
 
 Email:contact@amcharts.com
 Web: http://www.amcharts.com/
@@ -308,7 +328,7 @@ Facebook: https://www.facebook.com/amcharts
 Twitter: https://twitter.com/amcharts
 
 
-== Changelog ==
+## Changelog
 
-= 0.9 =
+### 0.9
 * Initial release
