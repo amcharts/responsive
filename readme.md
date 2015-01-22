@@ -322,10 +322,10 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 ## Contact us
 
-Email:contact@amcharts.com
-Web: http://www.amcharts.com/
-Facebook: https://www.facebook.com/amcharts
-Twitter: https://twitter.com/amcharts
+* Email:contact@amcharts.com
+* Web: http://www.amcharts.com/
+* Facebook: https://www.facebook.com/amcharts
+* Twitter: https://twitter.com/amcharts
 
 
 ## Changelog
