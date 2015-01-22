@@ -68,14 +68,14 @@ You can modify (or completely overwrite) the default responsive rules used by
 the plugin.
 
 A plugin works by checking chart area dimensions after each resize. (or after
-initial build) It then overrides particular settings suitable for these
-particular dimensions.
+initial build / mobile device orientation change) It then overrides particular
+settings suitable for these particular dimensions.
 
 Override rules are implemented by defining chart rules, or just "rules" moving
 forward. Each rule has two things:
 
-a) Dimension conditions;
-b) Overrides. (a set of properties to override for this particular rule)
+1. Dimension conditions;
+2. Overrides. (a set of properties to override for this particular rule)
 
 A rule is an object, for example:
 
