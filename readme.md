@@ -30,8 +30,13 @@ that. (see further down this file for instructions)
 
 ## Usage
 
-1. Include the minified version of file of this plugin. I.e.: (this needs to go
-after all the other amCharts includes)
+1. Include the minified version of file of this plugin. I.e.:
+
+```
+<script src="amcharts/plugins/responsive/responsive.min.js" type="text/javascript"></script>
+```
+
+(this needs to go after all the other amCharts includes)
 
 2. Add the following setting to your chart configuration:
 
@@ -285,13 +290,19 @@ the end of the list. This means that your rules will always have the "last
 word".
 
 
-### Requirements
+## Requirements
 
 This plugin requires at least 3.13 version of JavaScript Charts, JavaScript
 Stock Chart or JavaScript Maps.
 
 Any older versions will be ignored by this plugin. The charts will function but
 no responsive rules will be applied to them.
+
+
+## Demos
+
+Run the index.html in the subdirectory /examples. It will allow viewing misc
+chart types at various resolutions.
 
 
 ## Extending this plugin
