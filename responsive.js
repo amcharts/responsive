@@ -91,7 +91,7 @@ AmCharts.addInitHandler( function ( chart ) {
 				}
 			},
 			{
-				"maxHeight": 500,
+				"maxHeight": 350,
 				"legendPosition": "top",
 				"overrides": {
 					"legend": {
@@ -100,7 +100,7 @@ AmCharts.addInitHandler( function ( chart ) {
 				}
 			},
 			{
-				"maxHeight": 500,
+				"maxHeight": 350,
 				"legendPosition": "bottom",
 				"overrides": {
 					"legend": {
