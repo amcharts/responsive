@@ -2,7 +2,7 @@
 Plugin Name: amCharts Responsive
 Description: This plugin add responsive functionality to JavaScript Charts and Maps.
 Author: Martynas Majeris, amCharts
-Version: 0.9
+Version: 0.9.1
 Author URI: http://www.amcharts.com/
 
 Copyright 2015 amCharts
@@ -648,6 +648,24 @@ AmCharts.addInitHandler( function ( chart ) {
 					}
 				}
 			},
+			{
+				"maxWidth": 100,
+				"rotate": false,
+				"overrides": {
+					"valueAxes": {
+						"gridAlpha": 0
+					}
+				}
+			},
+			{
+				"maxWidth": 100,
+				"rotate": true,
+				"overrides": {
+					"categoryAxis": {
+						"gridAlpha": 0
+					}
+				}
+			},
 
 			/**
 			 * Short chart
@@ -741,6 +759,7 @@ AmCharts.addInitHandler( function ( chart ) {
 						"labelsEnabled": false,
 						"ignoreAxisWidth": true,
 						"axisAlpha": 0,
+						"gridAlpha": 0,
 						"guides": {
 							"label": ""
 						}
@@ -755,6 +774,7 @@ AmCharts.addInitHandler( function ( chart ) {
 						"labelsEnabled": false,
 						"ignoreAxisWidth": true,
 						"axisAlpha": 0,
+						"gridAlpha": 0,
 						"guides": {
 							"label": ""
 						}
@@ -890,6 +910,7 @@ AmCharts.addInitHandler( function ( chart ) {
 					"valueyAxes": {
 						"labelsEnabled": false,
 						"axisAlpha": 0,
+						"gridAlpha": 0,
 						"guides": {
 							"label": ""
 						}
@@ -926,6 +947,7 @@ AmCharts.addInitHandler( function ( chart ) {
 					"valueyAxes": {
 						"labelsEnabled": false,
 						"axisAlpha": 0,
+						"gridAlpha": 0,
 						"guides": {
 							"label": ""
 						}
