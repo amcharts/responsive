@@ -1,6 +1,6 @@
 # amCharts Responsive
 
-Version: 0.9
+Version: 0.9.1
 
 
 ## Description
@@ -340,6 +340,11 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 
 ## Changelog
+
+### 0.9.1
+* Made all examples use minified version of the plugin
+* Introduced removal of grid lines on micro charts
+* Tweaked legend hiding dimensions for pie chart
 
 ### 0.9
 * Initial release
