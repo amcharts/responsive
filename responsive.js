@@ -24,6 +24,8 @@ Please note that the above license covers only this plugin. It by all means does
 not apply to any other amCharts products that are covered by different licenses.
 */
 
+/*global AmCharts*/
+
 AmCharts.addInitHandler(function(chart) {
 
     if (chart.responsive === undefined || chart.responsive.ready || chart.responsive.enabled !== true)
@@ -1077,44 +1079,45 @@ AmCharts.addInitHandler(function(chart) {
         ]
     };
 
-    var findArrayObjectById = function (arr, id) {
+    var findArrayObjectById = function(arr, id) {
         for (var i = 0; i < arr.length; i++) {
             if (typeof arr[i] === 'object' && arr[i].id === id)
                 return arr[i];
         }
         return undefined;
-    }
+    };
 
-    var isArray = function (obj) {
+    var isArray = function(obj) {
         return Object.prototype.toString.call(obj) === '[object Array]';
-    }
+    };
 
-    var isObject = function (obj) {
+    var isObject = function(obj) {
         return typeof obj === 'object';
-    }
+    };
 
-    var setOriginalProperty = function (object, property, value) {
+    var setOriginalProperty = function(object, property, value) {
         if (object['_r_' + property] === undefined)
             object['_r_' + property] = value;
 
         r.overridden.push({ object: object, property: property });
-    }
+    };
 
-    var restoreOriginalProperty = function (object, property) {
+    var restoreOriginalProperty = function(object, property) {
         object[property] = object['_r_' + property];
-    }
+    };
 
-    var restoreOriginals = function () {
-        var override;
-        while (override = r.overridden.pop()) {
-            if (override.object['_r_' + override.property] === '_r_none')
+    var restoreOriginals = function() {
+        while (r.overridden.length > 0) {
+            var override = r.overridden.pop();
+            if (override.object['_r_' + override.property] === '_r_none') {
                 delete override.object[override.property];
-            else
+            } else {
                 override.object[override.property] = override.object['_r_' + override.property];
+            }
         }
-    }
+    };
 
-    var redrawChart = function () {
+    var redrawChart = function() {
         chart.dataChanged = true;
         if (chart.type !== 'xy') {
             chart.marginsUpdated = false;
@@ -1122,9 +1125,9 @@ AmCharts.addInitHandler(function(chart) {
         chart.zoomOutOnDataUpdate = false;
         chart.validateNow(true);
         restoreOriginalProperty(chart, 'zoomOutOnDataUpdate');
-    }
+    };
 
-    var applyConfig = function (original, override) {
+    var applyConfig = function(original, override) {
         for (var property in override) {
             if (!Object.prototype.hasOwnProperty.call(override, property)) {
                 continue;
@@ -1133,7 +1136,7 @@ AmCharts.addInitHandler(function(chart) {
             var originalValue = original[property];
             var overrideValue = override[property];
 
-            if (originalValue == undefined) {
+            if (originalValue === undefined || originalValue === null) {
                 original[property] = overrideValue;
                 setOriginalProperty(original, property, '_r_none');
                 continue;
@@ -1152,12 +1155,13 @@ AmCharts.addInitHandler(function(chart) {
                 if (isArray(overrideValue)) {
                     for (var i = 0; i < overrideValue.length; i++) {
                         var overrideArrValue = overrideValue[i];
-                        var originalArrValue = undefined;
+                        var originalArrValue;
 
-                        if (overrideArrValue.id === undefined && originalValue[i] !== undefined)
+                        if (overrideArrValue.id === undefined && originalValue[i] !== undefined) {
                             originalArrValue = originalValue[i];
-                        else if (overrideArrValue.id !== undefined)
+                        } else if (overrideArrValue.id !== undefined) {
                             originalArrValue = findArrayObjectById(originalValue, overrideArrValue.id);
+                        }
 
                         if (originalArrValue !== undefined) {
                             applyConfig(originalArrValue, overrideArrValue);
@@ -1184,9 +1188,9 @@ AmCharts.addInitHandler(function(chart) {
             setOriginalProperty(original, property, originalValue);
             original[property] = overrideValue;
         }
-    }
+    };
 
-    var checkRules = function () {
+    var checkRules = function() {
 
         var width = chart.divRealWidth;
         var height = chart.divRealHeight;
@@ -1197,10 +1201,10 @@ AmCharts.addInitHandler(function(chart) {
             var rule = r.rules[i];
 
             var ruleMatches =
-                (rule.minWidth === undefined || (rule.minWidth <= width)) && (rule.maxWidth === undefined || (rule.maxWidth >= width)) &&
-                (rule.minHeight === undefined || (rule.minHeight <= height)) && (rule.maxHeight === undefined || (rule.maxHeight >= height)) &&
-                (rule.rotate === undefined || (rule.rotate === true && chart.rotate === true) || (rule.rotate === false && (chart.rotate === undefined || chart.rotate === false))) &&
-                (rule.legendPosition === undefined || (chart.legend !== undefined && chart.legend.position !== undefined && chart.legend.position === rule.legendPosition));
+            (rule.minWidth === undefined || (rule.minWidth <= width)) && (rule.maxWidth === undefined || (rule.maxWidth >= width)) &&
+            (rule.minHeight === undefined || (rule.minHeight <= height)) && (rule.maxHeight === undefined || (rule.maxHeight >= height)) &&
+            (rule.rotate === undefined || (rule.rotate === true && chart.rotate === true) || (rule.rotate === false && (chart.rotate === undefined || chart.rotate === false))) &&
+            (rule.legendPosition === undefined || (chart.legend !== undefined && chart.legend.position !== undefined && chart.legend.position === rule.legendPosition));
 
             if (ruleMatches) {
                 if (r.currentRules[i] === undefined) {
@@ -1229,14 +1233,13 @@ AmCharts.addInitHandler(function(chart) {
 
         // TODO - re-apply zooms/slices as necessary
         redrawChart();
-    }
+    };
 
-    defaults['gantt'] = defaults['serial'];
+    defaults.gantt = defaults.serial;
 
     if (r.rules === undefined || r.rules.length === 0 || !isArray(r.rules)) {
         r.rules = defaults[chart.type];
-    }
-    else if (r.addDefaultRules !== false) {
+    } else if (r.addDefaultRules !== false) {
         r.rules = defaults[chart.type].concat(r.rules);
     }
 
