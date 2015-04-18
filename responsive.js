@@ -3,7 +3,7 @@ Plugin Name: amCharts Responsive
 Description: This plugin add responsive functionality to JavaScript Charts and Maps.
 Author: Martynas Majeris, amCharts
 Contributors: Ohad Schneider
-Version: 1.0
+Version: 1.1
 Author URI: http://www.amcharts.com/
 
 Copyright 2015 amCharts
@@ -27,12 +27,13 @@ not apply to any other amCharts products that are covered by different licenses.
 /*global AmCharts*/
 
 AmCharts.addInitHandler(function(chart) {
+    "use strict";
 
-    if (chart.responsive === undefined || chart.responsive.ready || chart.responsive.enabled !== true)
+    if (chart.responsive === undefined || chart.responsive.ready === true || chart.responsive.enabled !== true)
         return;
 
     var version = chart.version.split('.');
-    if ((Number(version[0]) < 3) || (Number(version[0]) === 3 && (Number(version[1]) < 13)))
+    if ((version.length < 2) || Number(version[0]) < 3 || (Number(version[0]) === 3 && Number(version[1]) < 13))
         return;
 
     // a short variable for easy reference
@@ -1079,14 +1080,20 @@ AmCharts.addInitHandler(function(chart) {
         ]
     };
 
+    var isNullOrUndefined = function(obj) {
+        return (obj === null) || (obj === undefined);
+    };
+
     var isArray = function (obj) {
-        return Object.prototype.toString.call(obj) === '[object Array]';
+        return (!isNullOrUndefined(obj) && Object.prototype.toString.call(obj) === '[object Array]');
     };
 
     var isObject = function (obj) {
         return typeof obj === 'object';
     };
 
+
+    var objectNotFound = {};
     var findArrayObjectById = function(arr, id) {
         for (var i = 0; i < arr.length; i++) {
             if (isObject(arr[i]) && arr[i].id === id)
@@ -1095,25 +1102,34 @@ AmCharts.addInitHandler(function(chart) {
         return undefined;
     };
 
-    var setOriginalProperty = function(object, property, value) {
-        if (object['_r_' + property] === undefined)
-            object['_r_' + property] = value;
+    var originalValueRetainerPrefix = '{F0578839-A214-4E2D-8D1B-44941ECE8332}_';
+    var noOriginalPropertyStub = {};
+
+    var overrideProperty = function (object, property, overrideValue) {
+
+        var originalValueRetainerProperty = originalValueRetainerPrefix + property;
+        if (!(originalValueRetainerProperty in object)) {
+            object[originalValueRetainerProperty] = (property in object) ? object[property] : noOriginalPropertyStub;
+        }
+
+        object[property] = overrideValue;
 
         r.overridden.push({ object: object, property: property });
     };
 
-    var restoreOriginalProperty = function(object, property) {
-        object[property] = object['_r_' + property];
+    var restoreOriginalProperty = function (object, property) {
+        var originalValue = object[originalValueRetainerPrefix + property];
+        if (originalValue === noOriginalPropertyStub) {
+            delete object[property];
+        } else {
+            object[property] = originalValue;
+        }
     };
 
     var restoreOriginals = function() {
         while (r.overridden.length > 0) {
             var override = r.overridden.pop();
-            if (override.object['_r_' + override.property] === '_r_none') {
-                delete override.object[override.property];
-            } else {
-                override.object[override.property] = override.object['_r_' + override.property];
-            }
+            restoreOriginalProperty(override.object, override.property);
         }
     };
 
@@ -1127,66 +1143,87 @@ AmCharts.addInitHandler(function(chart) {
         restoreOriginalProperty(chart, 'zoomOutOnDataUpdate');
     };
 
-    var applyConfig = function(original, override) {
+    var applyConfig = function (current, override) {
+        if (isNullOrUndefined(override)) {
+            return;
+        }
+
         for (var property in override) {
             if (!Object.prototype.hasOwnProperty.call(override, property)) {
                 continue;
             }
 
-            var originalValue = original[property];
+            var currentValue = current[property];
             var overrideValue = override[property];
 
-            if (originalValue === undefined || originalValue === null) {
-                original[property] = overrideValue;
-                setOriginalProperty(original, property, '_r_none');
+            //property doesn't exist on current object or it exists as null/undefined => completely override it
+            if (isNullOrUndefined(currentValue)) {
+                overrideProperty(current, property, overrideValue);
                 continue;
             }
 
-            if (isArray(originalValue)) {
+            //current value is an array => override method depends on override form
+            if (isArray(currentValue)) {
 
-                // original value is an array of non-objects
-                if (originalValue.length > 0 && !isObject(originalValue[0])) {
-                    setOriginalProperty(original, property, originalValue);
-                    original[property] = overrideValue;
-                    continue;
-                }
-
-                // override value is an array
+                //override value is an array => override method depends on array elements
                 if (isArray(overrideValue)) {
-                    for (var i = 0; i < overrideValue.length; i++) {
-                        var overrideArrValue = overrideValue[i];
-                        var originalArrValue;
 
-                        if (overrideArrValue.id === undefined && originalValue[i] !== undefined) {
-                            originalArrValue = originalValue[i];
-                        } else if (overrideArrValue.id !== undefined) {
-                            originalArrValue = findArrayObjectById(originalValue, overrideArrValue.id);
-                        }
+                    //current value is an array of non-objects => override the entire array
+                    //we assume a uniformly-typed array, so checking the first value should suffice
+                    if ((currentValue.length > 0 && !isObject(currentValue[0])) || (overrideValue.length > 0 && !isObject(overrideValue[0]))) {
+                        overrideProperty(current, property, overrideValue);
+                        continue;
+                    }
 
-                        if (originalArrValue !== undefined) {
-                            applyConfig(originalArrValue, overrideArrValue);
+                    var idPresentOnAllOverrideElements = true;
+                    for (var k = 0; k < overrideValue.length; k++) {
+                        if (isNullOrUndefined(overrideValue[k]) || isNullOrUndefined(overrideValue[k].id)) {
+                            idPresentOnAllOverrideElements = false;
+                            break;
                         }
+                    }
+
+                    //Id property is present on all override elements => override elements by ID
+                    if (idPresentOnAllOverrideElements) {
+                        for (var i = 0; i < overrideValue.length; i++) {
+                            var correspondingCurrentElement = findArrayObjectById(currentValue, overrideValue[i].id);
+                            if (correspondingCurrentElement === objectNotFound) {
+                                throw ('could not find element to override in "' + property + '" with ID: ' + overrideValue[i].id);
+                            }
+                            applyConfig(correspondingCurrentElement, overrideValue[i]);
+                        }
+                        continue;
+                    }
+
+                    //Id property is not set on all override elements and there aren't too many overrides => override objects by their index
+                    if (overrideValue.length <= currentValue.length) {
+                        for (var l = 0; l < overrideValue.length; l++) {
+                            applyConfig(currentValue[l], overrideValue[l]);
+                        }
+                        continue;
+                    }
+
+                    throw 'too many index-based overrides specified for object array property: ' + property;
+                }
+
+                // override value is a single object => override all current array objects with that object
+                if (isObject(overrideValue)) {
+                    for (var j = 0; j < currentValue.length; j++) {
+                        applyConfig(currentValue[j], overrideValue);
                     }
                     continue;
                 }
 
-                // override value is a single object (in which case, override all original array objects with that object)
-                if (isObject(overrideValue)) {
-                    for (var j = 0; j < originalValue.length; j++) {
-                        applyConfig(originalValue[j], overrideValue);
-                    }
-                }
-                continue; //if the original property is an array but the override property is a primitive, we ignore it
+                throw ('non-object override detected for array property: ' + property);
             }
 
-            if (isObject(originalValue)) {
-                applyConfig(originalValue, overrideValue);
+            if (isObject(currentValue)) {
+                applyConfig(currentValue, overrideValue);
                 continue;
             }
 
-            //if we reached this point, originalValue is defined but is not an object
-            setOriginalProperty(original, property, originalValue);
-            original[property] = overrideValue;
+            //if we reached this point, the property is defined on the current object but is not an object => override it
+            overrideProperty(current, property, overrideValue);
         }
     };
 
@@ -1195,12 +1232,12 @@ AmCharts.addInitHandler(function(chart) {
         var width = chart.divRealWidth;
         var height = chart.divRealHeight;
 
-        // get current rules
+        // update current rules
         var rulesChanged = false;
         for (var i = 0; i < r.rules.length; i++) {
             var rule = r.rules[i];
 
-            var ruleMatches =
+            var ruleMatches = 
             (rule.minWidth === undefined || (rule.minWidth <= width)) && (rule.maxWidth === undefined || (rule.maxWidth >= width)) &&
             (rule.minHeight === undefined || (rule.minHeight <= height)) && (rule.maxHeight === undefined || (rule.maxHeight >= height)) &&
             (rule.rotate === undefined || (rule.rotate === true && chart.rotate === true) || (rule.rotate === false && (chart.rotate === undefined || chart.rotate === false))) &&
@@ -1227,23 +1264,29 @@ AmCharts.addInitHandler(function(chart) {
                 continue;
             }
 
-            if (r.currentRules[key] !== undefined)
+            if (r.currentRules[key] !== undefined) {
+                if (isNullOrUndefined(r.rules[key])) {
+                    throw 'null or undefined rule in index: ' + key;
+                }
                 applyConfig(chart, r.rules[key].overrides);
+            }
         }
 
         // TODO - re-apply zooms/slices as necessary
+
         redrawChart();
     };
 
     defaults.gantt = defaults.serial;
 
-    if (r.rules === undefined || r.rules.length === 0 || !isArray(r.rules)) {
+    if (!isArray(r.rules)) {
         r.rules = defaults[chart.type];
     } else if (r.addDefaultRules !== false) {
         r.rules = defaults[chart.type].concat(r.rules);
     }
 
-    setOriginalProperty(chart, 'zoomOutOnDataUpdate', chart.zoomOutOnDataUpdate);
+    //retain original zoomOutOnDataUpdate value
+    overrideProperty(chart, 'zoomOutOnDataUpdate', chart.zoomOutOnDataUpdate);
 
     chart.addListener('resized', checkRules);
     chart.addListener('init', checkRules);
