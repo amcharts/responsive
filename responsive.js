@@ -25,13 +25,7 @@ not apply to any other amCharts products that are covered by different licenses.
 
 AmCharts.addInitHandler(function(chart) {
 
-    if (chart.responsive === undefined)
-        return;
-
-    if (chart.responsive.ready)
-        return;
-
-    if (chart.responsive.enabled !== true)
+    if (chart.responsive === undefined || chart.responsive.ready || chart.responsive.enabled !== true)
         return;
 
     var version = chart.version.split('.');
@@ -44,7 +38,6 @@ AmCharts.addInitHandler(function(chart) {
     r.ready = true;
     r.currentRules = {};
     r.overridden = [];
-    r.original = {};
 
     // defaults per chart type
     var defaults = {
@@ -1083,11 +1076,11 @@ AmCharts.addInitHandler(function(chart) {
         ]
     };
 
-    var findArrayObject = function (node, id) {
-        if (node instanceof Array) {
-            for (var x in node) {
-                if (typeof node[x] === 'object' && node[x].id === id)
-                    return node[x];
+    var findArrayObjectById = function (arr, id) {
+        if (arr instanceof Array) {
+            for (var x in arr) {
+                if (typeof arr[x] === 'object' && arr[x].id === id)
+                    return arr[x];
             }
         }
         return false;
@@ -1101,31 +1094,32 @@ AmCharts.addInitHandler(function(chart) {
         return typeof (obj) === 'object';
     }
 
-    var setOriginalProperty = function (object, prop, value) {
-        if (object['_r_' + prop] === undefined)
-            object['_r_' + prop] = value;
+    var setOriginalProperty = function (object, property, value) {
+        if (object['_r_' + property] === undefined)
+            object['_r_' + property] = value;
 
-        r.overridden.push({ o: object, p: prop });
+        r.overridden.push({ object: object, property: property });
     }
 
-    var restoreOriginalProperty = function (object, prop) {
-        object[prop] = object['_r_' + prop];
+    var restoreOriginalProperty = function (object, property) {
+        object[property] = object['_r_' + property];
     }
 
     var restoreOriginals = function () {
-        var p;
-        while (p = r.overridden.pop()) {
-            if (p.o['_r_' + p.p] === '_r_none')
-                delete p.o[p.p];
+        var override;
+        while (override = r.overridden.pop()) {
+            if (override.object['_r_' + override.property] === '_r_none')
+                delete override.object[override.property];
             else
-                p.o[p.p] = p.o['_r_' + p.p];
+                override.object[override.property] = override.object['_r_' + override.property];
         }
     }
 
     var redrawChart = function () {
         chart.dataChanged = true;
-        if (chart.type !== 'xy')
+        if (chart.type !== 'xy') {
             chart.marginsUpdated = false;
+        }
         chart.zoomOutOnDataUpdate = false;
         chart.validateNow(true);
         restoreOriginalProperty(chart, 'zoomOutOnDataUpdate');
@@ -1133,70 +1127,71 @@ AmCharts.addInitHandler(function(chart) {
 
     var applyConfig = function (original, override) {
         for (var key in override) {
-            if (original[key] === undefined) {
-                original[key] = override[key];
+            var originalValue = original[key];
+            var overrideValue = override[key];
+
+            if (originalValue === undefined) {
+                original[key] = overrideValue;
                 setOriginalProperty(original, key, '_r_none');
-            } else if (isArray(original[key])) {
+            } else if (isArray(originalValue)) {
                 // special case - apply overrides selectively
 
                 // an array of primitive values
-                if (original[key].length && !isObject(original[key][0])) {
-                    setOriginalProperty(original, key, original[key]);
-                    original[key] = override[key];
+                if (originalValue.length && !isObject(originalValue[0])) {
+                    setOriginalProperty(original, key, originalValue);
+                    original[key] = overrideValue;
                 }
 
-                    // an array of objects
-                else if (isArray(override[key])) {
-                    for (var x in override[key]) {
-                        var originalNode = false;
-                        if (override[key][x].id === undefined && original[key][x] !== undefined)
-                            originalNode = original[key][x];
-                        else if (override[key][x].id !== undefined)
-                            originalNode = findArrayObject(original[key], override[key][x].id);
-                        if (originalNode) {
-                            applyConfig(originalNode, override[key][x]);
+                // an array of objects
+                else if (isArray(overrideValue)) {
+                    for (var x in overrideValue) {
+                        var overrideArrValue = overrideValue[x];
+                        var originalArrValue = undefined;
+
+                        if (overrideArrValue.id === undefined && originalValue[x] !== undefined)
+                            originalArrValue = originalValue[x];
+                        else if (overrideArrValue.id !== undefined)
+                            originalArrValue = findArrayObjectById(originalValue, overrideArrValue.id);
+
+                        if (originalArrValue) {
+                            applyConfig(originalArrValue, overrideArrValue);
                         }
                     }
                 }
 
-                    // override all array objects with the same values form a single override object
-                else if (isObject(override[key])) {
-                    for (var x in original[key]) {
-                        applyConfig(original[key][x], override[key]);
+                // override all array objects with the same values form a single override object
+                else if (isObject(overrideValue)) {
+                    for (var x in originalValue) {
+                        applyConfig(originalValue[x], overrideValue);
                     }
                 }
                 //if the original property is an array but the override property is a primitive, ignore it
-            } else if (isObject(original[key])) {
-                applyConfig(original[key], override[key]);
+            } else if (isObject(originalValue)) {
+                applyConfig(originalValue, overrideValue);
             } else {
-                setOriginalProperty(original, key, original[key]);
-                original[key] = override[key];
+                setOriginalProperty(original, key, originalValue);
+                original[key] = overrideValue;
             }
         }
     }
 
     var checkRules = function () {
 
-        var w = chart.divRealWidth;
-        var h = chart.divRealHeight;
+        var width = chart.divRealWidth;
+        var height = chart.divRealHeight;
 
         // get current rules
         var rulesChanged = false;
         for (var x in r.rules) {
             var rule = r.rules[x];
-            if (
-                (rule.minWidth === undefined || (rule.minWidth <= w))
-                    &&
-                    (rule.maxWidth === undefined || (rule.maxWidth >= w))
-                    &&
-                    (rule.minHeight === undefined || (rule.minHeight <= h))
-                    &&
-                    (rule.maxHeight === undefined || (rule.maxHeight >= h))
-                    &&
-                    (rule.rotate === undefined || (rule.rotate === true && chart.rotate === true) || (rule.rotate === false && (chart.rotate === undefined || chart.rotate === false)))
-                    &&
-                    (rule.legendPosition === undefined || (chart.legend !== undefined && chart.legend.position !== undefined && chart.legend.position === rule.legendPosition))
-            ) {
+
+            var ruleMatches =
+                (rule.minWidth === undefined || (rule.minWidth <= width)) && (rule.maxWidth === undefined || (rule.maxWidth >= width)) &&
+                (rule.minHeight === undefined || (rule.minHeight <= height)) && (rule.maxHeight === undefined || (rule.maxHeight >= height)) &&
+                (rule.rotate === undefined || (rule.rotate === true && chart.rotate === true) || (rule.rotate === false && (chart.rotate === undefined || chart.rotate === false))) &&
+                (rule.legendPosition === undefined || (chart.legend !== undefined && chart.legend.position !== undefined && chart.legend.position === rule.legendPosition));
+            
+            if (ruleMatches) {
                 if (r.currentRules[x] === undefined) {
                     r.currentRules[x] = true;
                     rulesChanged = true;
@@ -1220,16 +1215,17 @@ AmCharts.addInitHandler(function(chart) {
         }
 
         // TODO - re-apply zooms/slices as necessary
-
         redrawChart();
     }
 
     defaults['gantt'] = defaults['serial'];
 
-    if (r.rules === undefined || r.rules.length === 0 || !isArray(r.rules))
+    if (r.rules === undefined || r.rules.length === 0 || !isArray(r.rules)) {
         r.rules = defaults[chart.type];
-    else if (r.addDefaultRules !== false)
+    }
+    else if (r.addDefaultRules !== false) {
         r.rules = defaults[chart.type].concat(r.rules);
+    }
 
     setOriginalProperty(chart, 'zoomOutOnDataUpdate', chart.zoomOutOnDataUpdate);
 
