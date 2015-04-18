@@ -2,6 +2,7 @@
 Plugin Name: amCharts Responsive
 Description: This plugin add responsive functionality to JavaScript Charts and Maps.
 Author: Martynas Majeris, amCharts
+Contributors: Ohad Schneider
 Version: 1.0
 Author URI: http://www.amcharts.com/
 
@@ -1133,17 +1134,20 @@ AmCharts.addInitHandler(function(chart) {
             if (originalValue === undefined) {
                 original[key] = overrideValue;
                 setOriginalProperty(original, key, '_r_none');
-            } else if (isArray(originalValue)) {
-                // special case - apply overrides selectively
+                continue;
+            }
 
-                // an array of primitive values
-                if (originalValue.length && !isObject(originalValue[0])) {
+            if (isArray(originalValue)) {
+
+                // original value is an array of primitive values
+                if (originalValue.length > 0 && !isObject(originalValue[0])) {
                     setOriginalProperty(original, key, originalValue);
                     original[key] = overrideValue;
+                    continue;
                 }
 
-                // an array of objects
-                else if (isArray(overrideValue)) {
+                // override value is an array
+                if (isArray(overrideValue)) {
                     for (var x in overrideValue) {
                         var overrideArrValue = overrideValue[x];
                         var originalArrValue = undefined;
@@ -1157,21 +1161,26 @@ AmCharts.addInitHandler(function(chart) {
                             applyConfig(originalArrValue, overrideArrValue);
                         }
                     }
+                    continue;
                 }
 
-                // override all array objects with the same values form a single override object
-                else if (isObject(overrideValue)) {
+                // override value is a single object (in which case, override all original array objects with that object)
+                if (isObject(overrideValue)) {
                     for (var x in originalValue) {
                         applyConfig(originalValue[x], overrideValue);
                     }
                 }
-                //if the original property is an array but the override property is a primitive, ignore it
-            } else if (isObject(originalValue)) {
-                applyConfig(originalValue, overrideValue);
-            } else {
-                setOriginalProperty(original, key, originalValue);
-                original[key] = overrideValue;
+                continue; //if the original property is an array but the override property is a primitive, we ignore it
             }
+
+            if (isObject(originalValue)) {
+                applyConfig(originalValue, overrideValue);
+                continue;
+            }
+
+            //if we reached this point, originalValue is defined but is not an object
+            setOriginalProperty(original, key, originalValue);
+            original[key] = overrideValue;
         }
     }
 
