@@ -25,29 +25,25 @@ not apply to any other amCharts products that are covered by different licenses.
 
 AmCharts.addInitHandler(function(chart) {
 
-    // check if responsive object is set
     if (chart.responsive === undefined)
         return;
 
-    // check if it's already initialized
     if (chart.responsive.ready)
         return;
 
-    // a small variable for easy reference
+    // a short variable for easy reference
     var r = chart.responsive;
 
-    // init
     r.ready = true;
     r.currentRules = {};
     r.overridden = [];
     r.original = {};
 
     // check if responsive is enabled
-    if (true !== r.enabled)
+    if (r.enabled !== true)
         return;
 
-    // check charts version for compatibility
-    // the first compatible version is 3.13
+    // check charts version for compatibility (the first compatible version is 3.13)
     var version = chart.version.split('.');
     if ((Number(version[0]) < 3) || (Number(version[0]) === 3 && (Number(version[1]) < 13)))
         return;
@@ -1089,25 +1085,20 @@ AmCharts.addInitHandler(function(chart) {
         ]
     };
 
-    // duplicate the serial chart defaults for gantt
     defaults['gantt'] = defaults['serial'];
 
-    // populate with defaults if necessary
     if (r.rules === undefined || r.rules.length === 0 || !isArray(r.rules))
         r.rules = defaults[chart.type];
     else if (r.addDefaultRules !== false)
         r.rules = defaults[chart.type].concat(r.rules);
 
-    // set original 
     setOriginalProperty(chart, 'zoomOutOnDataUpdate', chart.zoomOutOnDataUpdate);
 
-    // tap into chart resize events
     chart.addListener('resized', checkRules);
     chart.addListener('init', checkRules);
 
     function checkRules() {
 
-        // get current chart dimensions
         var w = chart.divRealWidth;
         var h = chart.divRealHeight;
 
@@ -1140,23 +1131,18 @@ AmCharts.addInitHandler(function(chart) {
             }
         }
 
-        // check if any rules have changed
         if (!rulesChanged)
             return;
 
-        // apply original config
         restoreOriginals();
 
-        // apply rule-specific properties
         for (var x in r.currentRules) {
             if (r.currentRules[x] !== undefined)
                 applyConfig(chart, r.rules[x].overrides);
         }
 
-        // re-apply zooms/slices as necessary
-        // TODO
+        // TODO - re-apply zooms/slices as necessary
 
-        // redraw the chart
         redrawChart();
     }
 
@@ -1195,12 +1181,13 @@ AmCharts.addInitHandler(function(chart) {
             } else if (isArray(original[key])) {
                 // special case - apply overrides selectively
 
-                // an array of simple values
+                // an array of primitive values
                 if (original[key].length && ! isObject(original[key][0])) {
                     setOriginalProperty(original, key, original[key]);
                     original[key] = override[key];
                 }
-// an array of objects
+
+                // an array of objects
                 else if (isArray(override[key])) {
                     for (var x in override[key]) {
                         var originalNode = false;
@@ -1213,17 +1200,14 @@ AmCharts.addInitHandler(function(chart) {
                         }
                     }
                 }
-// override all array objects with the same values form a single
-                // override object
+
+                // override all array objects with the same values form a single override object
                 else if (isObject(override[key])) {
                     for (var x in original[key]) {
                         applyConfig(original[key][x], override[key]);
                     }
                 }
-// error situation
-                else {
-                    // do nothing (we can't override array using single value)
-                }
+                //if the original property is an array but the override property is a primitive, ignore it
             } else if (isObject(original[key])) {
                 applyConfig(original[key], override[key]);
             } else {
