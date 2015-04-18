@@ -26,7 +26,7 @@ not apply to any other amCharts products that are covered by different licenses.
 AmCharts.addInitHandler(function(chart) {
 
     // check if responsive object is set
-    if (undefined === chart.responsive)
+    if (chart.responsive === undefined)
         return;
 
     // check if it's already initialized
@@ -37,8 +37,8 @@ AmCharts.addInitHandler(function(chart) {
     var r = chart.responsive;
 
     // init
-    r.ready = true,
-        r.currentRules = {};
+    r.ready = true;
+    r.currentRules = {};
     r.overridden = [];
     r.original = {};
 
@@ -49,7 +49,7 @@ AmCharts.addInitHandler(function(chart) {
     // check charts version for compatibility
     // the first compatible version is 3.13
     var version = chart.version.split('.');
-    if ((Number(version[0]) < 3) || (3 == Number(version[0]) && (Number(version[1]) < 13)))
+    if ((Number(version[0]) < 3) || (Number(version[0]) === 3 && (Number(version[1]) < 13)))
         return;
 
     // defaults per chart type
@@ -1093,9 +1093,9 @@ AmCharts.addInitHandler(function(chart) {
     defaults['gantt'] = defaults['serial'];
 
     // populate with defaults if necessary
-    if (undefined == r.rules || 0 == r.rules.length || !isArray(r.rules))
+    if (r.rules === undefined || r.rules.length === 0 || !isArray(r.rules))
         r.rules = defaults[chart.type];
-    else if (false !== r.addDefaultRules)
+    else if (r.addDefaultRules !== false)
         r.rules = defaults[chart.type].concat(r.rules);
 
     // set original 
@@ -1116,24 +1116,24 @@ AmCharts.addInitHandler(function(chart) {
         for (var x in r.rules) {
             var rule = r.rules[x];
             if (
-                (undefined == rule.minWidth || (rule.minWidth <= w))
+                (rule.minWidth === undefined || (rule.minWidth <= w))
                     &&
-                    (undefined == rule.maxWidth || (rule.maxWidth >= w))
+                    (rule.maxWidth === undefined || (rule.maxWidth >= w))
                     &&
-                    (undefined == rule.minHeight || (rule.minHeight <= h))
+                    (rule.minHeight === undefined || (rule.minHeight <= h))
                     &&
-                    (undefined == rule.maxHeight || (rule.maxHeight >= h))
+                    (rule.maxHeight === undefined || (rule.maxHeight >= h))
                     &&
-                    (undefined == rule.rotate || (true === rule.rotate && true === chart.rotate) || (false === rule.rotate && (undefined === chart.rotate || false === chart.rotate)))
+                    (rule.rotate === undefined || (rule.rotate === true && chart.rotate === true) || (rule.rotate === false && (chart.rotate === undefined || chart.rotate === false)))
                     &&
-                    (undefined == rule.legendPosition || (undefined !== chart.legend && undefined !== chart.legend.position && chart.legend.position === rule.legendPosition))
+                    (rule.legendPosition === undefined || (chart.legend !== undefined && chart.legend.position !== undefined && chart.legend.position === rule.legendPosition))
             ) {
-                if (undefined == r.currentRules[x]) {
+                if (r.currentRules[x] === undefined) {
                     r.currentRules[x] = true;
                     rulesChanged = true;
                 }
             } else {
-                if (undefined != r.currentRules[x]) {
+                if (r.currentRules[x] !== undefined) {
                     r.currentRules[x] = undefined;
                     rulesChanged = true;
                 }
@@ -1149,7 +1149,7 @@ AmCharts.addInitHandler(function(chart) {
 
         // apply rule-specific properties
         for (var x in r.currentRules) {
-            if (undefined != r.currentRules[x])
+            if (r.currentRules[x] !== undefined)
                 applyConfig(chart, r.rules[x].overrides);
         }
 
@@ -1163,7 +1163,7 @@ AmCharts.addInitHandler(function(chart) {
     function findArrayObject(node, id) {
         if (node instanceof Array) {
             for (var x in node) {
-                if ('object' === typeof node[x] && node[x].id == id)
+                if (typeof node[x] === 'object' && node[x].id === id)
                     return node[x];
             }
         }
@@ -1172,7 +1172,7 @@ AmCharts.addInitHandler(function(chart) {
 
     function redrawChart() {
         chart.dataChanged = true;
-        if ('xy' !== chart.type)
+        if (chart.type !== 'xy')
             chart.marginsUpdated = false;
         chart.zoomOutOnDataUpdate = false;
         chart.validateNow(true);
@@ -1184,12 +1184,12 @@ AmCharts.addInitHandler(function(chart) {
     }
 
     function isObject(obj) {
-        return 'object' === typeof(obj);
+        return typeof(obj) === 'object';
     }
 
     function applyConfig(original, override) {
         for (var key in override) {
-            if (undefined === original[key]) {
+            if (original[key] === undefined) {
                 original[key] = override[key];
                 setOriginalProperty(original, key, '_r_none');
             } else if (isArray(original[key])) {
@@ -1204,9 +1204,9 @@ AmCharts.addInitHandler(function(chart) {
                 else if (isArray(override[key])) {
                     for (var x in override[key]) {
                         var originalNode = false;
-                        if (undefined === override[key][x].id && undefined != original[key][x])
+                        if (override[key][x].id === undefined && original[key][x] !== undefined)
                             originalNode = original[key][x];
-                        else if (undefined !== override[key][x].id)
+                        else if (override[key][x].id !== undefined)
                             originalNode = findArrayObject(original[key], override[key][x].id);
                         if (originalNode) {
                             applyConfig(originalNode, override[key][x]);
@@ -1234,7 +1234,7 @@ AmCharts.addInitHandler(function(chart) {
     }
 
     function setOriginalProperty(object, prop, value) {
-        if (undefined === object['_r_' + prop])
+        if (object['_r_' + prop] === undefined)
             object['_r_' + prop] = value;
 
         r.overridden.push({ o: object, p: prop });
@@ -1243,7 +1243,7 @@ AmCharts.addInitHandler(function(chart) {
     function restoreOriginals() {
         var p;
         while (p = r.overridden.pop()) {
-            if ('_r_none' === p.o['_r_' + p.p])
+            if (p.o['_r_' + p.p] === '_r_none')
                 delete p.o[p.p];
             else
                 p.o[p.p] = p.o['_r_' + p.p];
