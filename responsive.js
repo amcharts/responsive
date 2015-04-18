@@ -1078,21 +1078,19 @@ AmCharts.addInitHandler(function(chart) {
     };
 
     var findArrayObjectById = function (arr, id) {
-        if (arr instanceof Array) {
-            for (var x in arr) {
-                if (typeof arr[x] === 'object' && arr[x].id === id)
-                    return arr[x];
-            }
+        for (var i = 0; i < arr.length; i++) {
+            if (typeof arr[i] === 'object' && arr[i].id === id)
+                return arr[i];
         }
-        return false;
+        return undefined;
     }
 
     var isArray = function (obj) {
-        return obj instanceof Array;
+        return Object.prototype.toString.call(obj) === '[object Array]';
     }
 
     var isObject = function (obj) {
-        return typeof (obj) === 'object';
+        return typeof obj === 'object';
     }
 
     var setOriginalProperty = function (object, property, value) {
@@ -1131,7 +1129,7 @@ AmCharts.addInitHandler(function(chart) {
             var originalValue = original[key];
             var overrideValue = override[key];
 
-            if (originalValue === undefined) {
+            if (originalValue == undefined) {
                 original[key] = overrideValue;
                 setOriginalProperty(original, key, '_r_none');
                 continue;
@@ -1139,7 +1137,7 @@ AmCharts.addInitHandler(function(chart) {
 
             if (isArray(originalValue)) {
 
-                // original value is an array of primitive values
+                // original value is an array of non-objects
                 if (originalValue.length > 0 && !isObject(originalValue[0])) {
                     setOriginalProperty(original, key, originalValue);
                     original[key] = overrideValue;
@@ -1148,16 +1146,16 @@ AmCharts.addInitHandler(function(chart) {
 
                 // override value is an array
                 if (isArray(overrideValue)) {
-                    for (var x in overrideValue) {
-                        var overrideArrValue = overrideValue[x];
+                    for (var i = 0; i < overrideValue.length; i++) {
+                        var overrideArrValue = overrideValue[i];
                         var originalArrValue = undefined;
 
-                        if (overrideArrValue.id === undefined && originalValue[x] !== undefined)
-                            originalArrValue = originalValue[x];
+                        if (overrideArrValue.id === undefined && originalValue[i] !== undefined)
+                            originalArrValue = originalValue[i];
                         else if (overrideArrValue.id !== undefined)
                             originalArrValue = findArrayObjectById(originalValue, overrideArrValue.id);
 
-                        if (originalArrValue) {
+                        if (originalArrValue !== undefined) {
                             applyConfig(originalArrValue, overrideArrValue);
                         }
                     }
@@ -1166,8 +1164,8 @@ AmCharts.addInitHandler(function(chart) {
 
                 // override value is a single object (in which case, override all original array objects with that object)
                 if (isObject(overrideValue)) {
-                    for (var x in originalValue) {
-                        applyConfig(originalValue[x], overrideValue);
+                    for (var j = 0; j < originalValue.length; j++) {
+                        applyConfig(originalValue[j], overrideValue);
                     }
                 }
                 continue; //if the original property is an array but the override property is a primitive, we ignore it
@@ -1191,25 +1189,23 @@ AmCharts.addInitHandler(function(chart) {
 
         // get current rules
         var rulesChanged = false;
-        for (var x in r.rules) {
-            var rule = r.rules[x];
+        for (var i = 0; i < r.rules.length; i++) {
+            var rule = r.rules[i];
 
             var ruleMatches =
                 (rule.minWidth === undefined || (rule.minWidth <= width)) && (rule.maxWidth === undefined || (rule.maxWidth >= width)) &&
                 (rule.minHeight === undefined || (rule.minHeight <= height)) && (rule.maxHeight === undefined || (rule.maxHeight >= height)) &&
                 (rule.rotate === undefined || (rule.rotate === true && chart.rotate === true) || (rule.rotate === false && (chart.rotate === undefined || chart.rotate === false))) &&
                 (rule.legendPosition === undefined || (chart.legend !== undefined && chart.legend.position !== undefined && chart.legend.position === rule.legendPosition));
-            
+
             if (ruleMatches) {
-                if (r.currentRules[x] === undefined) {
-                    r.currentRules[x] = true;
+                if (r.currentRules[i] === undefined) {
+                    r.currentRules[i] = true;
                     rulesChanged = true;
                 }
-            } else {
-                if (r.currentRules[x] !== undefined) {
-                    r.currentRules[x] = undefined;
-                    rulesChanged = true;
-                }
+            } else if (r.currentRules[i] !== undefined) {
+                r.currentRules[i] = undefined;
+                rulesChanged = true;
             }
         }
 
