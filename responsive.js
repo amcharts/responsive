@@ -1079,20 +1079,20 @@ AmCharts.addInitHandler(function(chart) {
         ]
     };
 
-    var findArrayObjectById = function(arr, id) {
-        for (var i = 0; i < arr.length; i++) {
-            if (typeof arr[i] === 'object' && arr[i].id === id)
-                return arr[i];
-        }
-        return undefined;
-    };
-
-    var isArray = function(obj) {
+    var isArray = function (obj) {
         return Object.prototype.toString.call(obj) === '[object Array]';
     };
 
-    var isObject = function(obj) {
+    var isObject = function (obj) {
         return typeof obj === 'object';
+    };
+
+    var findArrayObjectById = function(arr, id) {
+        for (var i = 0; i < arr.length; i++) {
+            if (isObject(arr[i]) && arr[i].id === id)
+                return arr[i];
+        }
+        return undefined;
     };
 
     var setOriginalProperty = function(object, property, value) {
