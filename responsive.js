@@ -1125,13 +1125,17 @@ AmCharts.addInitHandler(function(chart) {
     }
 
     var applyConfig = function (original, override) {
-        for (var key in override) {
-            var originalValue = original[key];
-            var overrideValue = override[key];
+        for (var property in override) {
+            if (!Object.prototype.hasOwnProperty.call(override, property)) {
+                continue;
+            }
+
+            var originalValue = original[property];
+            var overrideValue = override[property];
 
             if (originalValue == undefined) {
-                original[key] = overrideValue;
-                setOriginalProperty(original, key, '_r_none');
+                original[property] = overrideValue;
+                setOriginalProperty(original, property, '_r_none');
                 continue;
             }
 
@@ -1139,8 +1143,8 @@ AmCharts.addInitHandler(function(chart) {
 
                 // original value is an array of non-objects
                 if (originalValue.length > 0 && !isObject(originalValue[0])) {
-                    setOriginalProperty(original, key, originalValue);
-                    original[key] = overrideValue;
+                    setOriginalProperty(original, property, originalValue);
+                    original[property] = overrideValue;
                     continue;
                 }
 
@@ -1177,8 +1181,8 @@ AmCharts.addInitHandler(function(chart) {
             }
 
             //if we reached this point, originalValue is defined but is not an object
-            setOriginalProperty(original, key, originalValue);
-            original[key] = overrideValue;
+            setOriginalProperty(original, property, originalValue);
+            original[property] = overrideValue;
         }
     }
 
@@ -1214,9 +1218,13 @@ AmCharts.addInitHandler(function(chart) {
 
         restoreOriginals();
 
-        for (var x in r.currentRules) {
-            if (r.currentRules[x] !== undefined)
-                applyConfig(chart, r.rules[x].overrides);
+        for (var key in r.currentRules) {
+            if (!Object.prototype.hasOwnProperty.call(r.currentRules, key)) {
+                continue;
+            }
+
+            if (r.currentRules[key] !== undefined)
+                applyConfig(chart, r.rules[key].overrides);
         }
 
         // TODO - re-apply zooms/slices as necessary
