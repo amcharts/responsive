@@ -31,6 +31,13 @@ AmCharts.addInitHandler(function(chart) {
     if (chart.responsive.ready)
         return;
 
+    if (chart.responsive.enabled !== true)
+        return;
+
+    var version = chart.version.split('.');
+    if ((Number(version[0]) < 3) || (Number(version[0]) === 3 && (Number(version[1]) < 13)))
+        return;
+
     // a short variable for easy reference
     var r = chart.responsive;
 
@@ -38,15 +45,6 @@ AmCharts.addInitHandler(function(chart) {
     r.currentRules = {};
     r.overridden = [];
     r.original = {};
-
-    // check if responsive is enabled
-    if (r.enabled !== true)
-        return;
-
-    // check charts version for compatibility (the first compatible version is 3.13)
-    var version = chart.version.split('.');
-    if ((Number(version[0]) < 3) || (Number(version[0]) === 3 && (Number(version[1]) < 13)))
-        return;
 
     // defaults per chart type
     var defaults = {
@@ -1085,19 +1083,99 @@ AmCharts.addInitHandler(function(chart) {
         ]
     };
 
-    defaults['gantt'] = defaults['serial'];
+    var findArrayObject = function (node, id) {
+        if (node instanceof Array) {
+            for (var x in node) {
+                if (typeof node[x] === 'object' && node[x].id === id)
+                    return node[x];
+            }
+        }
+        return false;
+    }
 
-    if (r.rules === undefined || r.rules.length === 0 || !isArray(r.rules))
-        r.rules = defaults[chart.type];
-    else if (r.addDefaultRules !== false)
-        r.rules = defaults[chart.type].concat(r.rules);
+    var isArray = function (obj) {
+        return obj instanceof Array;
+    }
 
-    setOriginalProperty(chart, 'zoomOutOnDataUpdate', chart.zoomOutOnDataUpdate);
+    var isObject = function (obj) {
+        return typeof (obj) === 'object';
+    }
 
-    chart.addListener('resized', checkRules);
-    chart.addListener('init', checkRules);
+    var setOriginalProperty = function (object, prop, value) {
+        if (object['_r_' + prop] === undefined)
+            object['_r_' + prop] = value;
 
-    function checkRules() {
+        r.overridden.push({ o: object, p: prop });
+    }
+
+    var restoreOriginalProperty = function (object, prop) {
+        object[prop] = object['_r_' + prop];
+    }
+
+    var restoreOriginals = function () {
+        var p;
+        while (p = r.overridden.pop()) {
+            if (p.o['_r_' + p.p] === '_r_none')
+                delete p.o[p.p];
+            else
+                p.o[p.p] = p.o['_r_' + p.p];
+        }
+    }
+
+    var redrawChart = function () {
+        chart.dataChanged = true;
+        if (chart.type !== 'xy')
+            chart.marginsUpdated = false;
+        chart.zoomOutOnDataUpdate = false;
+        chart.validateNow(true);
+        restoreOriginalProperty(chart, 'zoomOutOnDataUpdate');
+    }
+
+    var applyConfig = function (original, override) {
+        for (var key in override) {
+            if (original[key] === undefined) {
+                original[key] = override[key];
+                setOriginalProperty(original, key, '_r_none');
+            } else if (isArray(original[key])) {
+                // special case - apply overrides selectively
+
+                // an array of primitive values
+                if (original[key].length && !isObject(original[key][0])) {
+                    setOriginalProperty(original, key, original[key]);
+                    original[key] = override[key];
+                }
+
+                    // an array of objects
+                else if (isArray(override[key])) {
+                    for (var x in override[key]) {
+                        var originalNode = false;
+                        if (override[key][x].id === undefined && original[key][x] !== undefined)
+                            originalNode = original[key][x];
+                        else if (override[key][x].id !== undefined)
+                            originalNode = findArrayObject(original[key], override[key][x].id);
+                        if (originalNode) {
+                            applyConfig(originalNode, override[key][x]);
+                        }
+                    }
+                }
+
+                    // override all array objects with the same values form a single override object
+                else if (isObject(override[key])) {
+                    for (var x in original[key]) {
+                        applyConfig(original[key][x], override[key]);
+                    }
+                }
+                //if the original property is an array but the override property is a primitive, ignore it
+            } else if (isObject(original[key])) {
+                applyConfig(original[key], override[key]);
+            } else {
+                setOriginalProperty(original, key, original[key]);
+                original[key] = override[key];
+            }
+        }
+    }
+
+    var checkRules = function () {
 
         var w = chart.divRealWidth;
         var h = chart.divRealHeight;
@@ -1146,96 +1224,16 @@ AmCharts.addInitHandler(function(chart) {
         redrawChart();
     }
 
-    function findArrayObject(node, id) {
-        if (node instanceof Array) {
-            for (var x in node) {
-                if (typeof node[x] === 'object' && node[x].id === id)
-                    return node[x];
-            }
-        }
-        return false;
-    }
+    defaults['gantt'] = defaults['serial'];
 
-    function redrawChart() {
-        chart.dataChanged = true;
-        if (chart.type !== 'xy')
-            chart.marginsUpdated = false;
-        chart.zoomOutOnDataUpdate = false;
-        chart.validateNow(true);
-        restoreOriginalProperty(chart, 'zoomOutOnDataUpdate');
-    }
+    if (r.rules === undefined || r.rules.length === 0 || !isArray(r.rules))
+        r.rules = defaults[chart.type];
+    else if (r.addDefaultRules !== false)
+        r.rules = defaults[chart.type].concat(r.rules);
 
-    function isArray(obj) {
-        return obj instanceof Array;
-    }
+    setOriginalProperty(chart, 'zoomOutOnDataUpdate', chart.zoomOutOnDataUpdate);
 
-    function isObject(obj) {
-        return typeof(obj) === 'object';
-    }
-
-    function applyConfig(original, override) {
-        for (var key in override) {
-            if (original[key] === undefined) {
-                original[key] = override[key];
-                setOriginalProperty(original, key, '_r_none');
-            } else if (isArray(original[key])) {
-                // special case - apply overrides selectively
-
-                // an array of primitive values
-                if (original[key].length && ! isObject(original[key][0])) {
-                    setOriginalProperty(original, key, original[key]);
-                    original[key] = override[key];
-                }
-
-                // an array of objects
-                else if (isArray(override[key])) {
-                    for (var x in override[key]) {
-                        var originalNode = false;
-                        if (override[key][x].id === undefined && original[key][x] !== undefined)
-                            originalNode = original[key][x];
-                        else if (override[key][x].id !== undefined)
-                            originalNode = findArrayObject(original[key], override[key][x].id);
-                        if (originalNode) {
-                            applyConfig(originalNode, override[key][x]);
-                        }
-                    }
-                }
-
-                // override all array objects with the same values form a single override object
-                else if (isObject(override[key])) {
-                    for (var x in original[key]) {
-                        applyConfig(original[key][x], override[key]);
-                    }
-                }
-                //if the original property is an array but the override property is a primitive, ignore it
-            } else if (isObject(original[key])) {
-                applyConfig(original[key], override[key]);
-            } else {
-                setOriginalProperty(original, key, original[key]);
-                original[key] = override[key];
-            }
-        }
-    }
-
-    function setOriginalProperty(object, prop, value) {
-        if (object['_r_' + prop] === undefined)
-            object['_r_' + prop] = value;
-
-        r.overridden.push({ o: object, p: prop });
-    }
-
-    function restoreOriginals() {
-        var p;
-        while (p = r.overridden.pop()) {
-            if (p.o['_r_' + p.p] === '_r_none')
-                delete p.o[p.p];
-            else
-                p.o[p.p] = p.o['_r_' + p.p];
-        }
-    }
-
-    function restoreOriginalProperty(object, prop) {
-        object[prop] = object['_r_' + prop];
-    }
+    chart.addListener('resized', checkRules);
+    chart.addListener('init', checkRules);
 
 }, ['pie', 'serial', 'xy', 'funnel', 'radar', 'gauge', 'gantt', 'stock', 'map']);
