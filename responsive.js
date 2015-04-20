@@ -1089,17 +1089,33 @@ AmCharts.addInitHandler(function(chart) {
     };
 
     var isObject = function (obj) {
-        return typeof obj === 'object';
+        return (obj !== null && typeof obj === 'object'); //the null check is necessary - recall that typeof null === 'object' !
     };
 
-
-    var objectNotFound = {};
     var findArrayObjectById = function(arr, id) {
         for (var i = 0; i < arr.length; i++) {
             if (isObject(arr[i]) && arr[i].id === id)
                 return arr[i];
         }
-        return undefined;
+        return undefined; //we can use undefined as it doesn't have an Id property and so will never be the desired object from the array
+    };
+
+    var cloneWithoutPrototypes = function(obj) {
+        if (!isObject(obj)) {
+            return obj;
+        }
+
+        if (isArray(obj)) {
+            return obj.slice(); //effectively clones the array
+        }
+
+        var clone = {}; //here is where we lose the prototype
+        for (var property in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, property)) {
+                clone[property] = cloneWithoutPrototypes(obj[property]);
+            }
+        }
+        return clone;
     };
 
     var originalValueRetainerPrefix = '{F0578839-A214-4E2D-8D1B-44941ECE8332}_';
@@ -1112,7 +1128,7 @@ AmCharts.addInitHandler(function(chart) {
             object[originalValueRetainerProperty] = (property in object) ? object[property] : noOriginalPropertyStub;
         }
 
-        object[property] = overrideValue;
+        object[property] = cloneWithoutPrototypes(overrideValue);
 
         r.overridden.push({ object: object, property: property });
     };
@@ -1187,7 +1203,7 @@ AmCharts.addInitHandler(function(chart) {
                     if (idPresentOnAllOverrideElements) {
                         for (var i = 0; i < overrideValue.length; i++) {
                             var correspondingCurrentElement = findArrayObjectById(currentValue, overrideValue[i].id);
-                            if (correspondingCurrentElement === objectNotFound) {
+                            if (correspondingCurrentElement === undefined) {
                                 throw ('could not find element to override in "' + property + '" with ID: ' + overrideValue[i].id);
                             }
                             applyConfig(correspondingCurrentElement, overrideValue[i]);
