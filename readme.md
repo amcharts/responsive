@@ -342,8 +342,8 @@ http://www.apache.org/licenses/LICENSE-2.0
 ## Changelog
 
 ### 1.0.1
-* Better V3.14 support
-* Fixed possible error with override value being replaced with chart object reference
+* Fixed bug with overrides being overwritten with chart object in some cases
+* V3.14 compatibility
 
 ### 1.0
 * Added support for GANTT chart type (available sin JavaScript Charts V3.14)
