@@ -1179,6 +1179,10 @@ AmCharts.addInitHandler( function( chart ) {
     var width = chart.divRealWidth;
     var height = chart.divRealHeight;
 
+    // do nothing if the container is hidden (has no size)
+    if ( width === 0 || height === 0 )
+      return;
+
     // update current rules
     var rulesChanged = false;
     for ( var i = 0; i < r.rules.length; i++ ) {
