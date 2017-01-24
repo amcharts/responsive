@@ -1185,17 +1185,17 @@ AmCharts.addInitHandler( function( chart ) {
       var rule = r.rules[ i ];
 
       var ruleMatches =
-        ( rule.minWidth === undefined || ( rule.minWidth <= width ) ) && ( rule.maxWidth === undefined || ( rule.maxWidth >= width ) ) &&
-        ( rule.minHeight === undefined || ( rule.minHeight <= height ) ) && ( rule.maxHeight === undefined || ( rule.maxHeight >= height ) ) &&
-        ( rule.rotate === undefined || ( rule.rotate === true && chart.rotate === true ) || ( rule.rotate === false && ( chart.rotate === undefined || chart.rotate === false ) ) ) &&
-        ( rule.legendPosition === undefined || ( chart.legend !== undefined && chart.legend.position !== undefined && chart.legend.position === rule.legendPosition ) );
+        ( isNullOrUndefined(rule.minWidth) || ( rule.minWidth <= width ) ) && ( isNullOrUndefined(rule.maxWidth) || ( rule.maxWidth >= width ) ) &&
+        ( isNullOrUndefined(rule.minHeight) || ( rule.minHeight <= height ) ) && ( isNullOrUndefined(rule.maxHeight) || ( rule.maxHeight >= height ) ) &&
+        ( isNullOrUndefined(rule.rotate) || ( rule.rotate === true && chart.rotate === true ) || ( rule.rotate === false && ( isNullOrUndefined(chart.rotate) || chart.rotate === false ) ) ) &&
+        ( isNullOrUndefined(rule.legendPosition) || ( !isNullOrUndefined(chart.legend) && !isNullOrUndefined(chart.legend.position) && chart.legend.position === rule.legendPosition ) );
 
       if ( ruleMatches ) {
-        if ( r.currentRules[ i ] === undefined ) {
+        if ( isNullOrUndefined(r.currentRules[ i ]) ) {
           r.currentRules[ i ] = true;
           rulesChanged = true;
         }
-      } else if ( r.currentRules[ i ] !== undefined ) {
+      } else if ( !isNullOrUndefined(r.currentRules[ i ])) {
         r.currentRules[ i ] = undefined;
         rulesChanged = true;
       }
@@ -1211,7 +1211,7 @@ AmCharts.addInitHandler( function( chart ) {
         continue;
       }
 
-      if ( r.currentRules[ key ] !== undefined ) {
+      if ( !isNullOrUndefined(r.currentRules[ key ]) ) {
         if ( isNullOrUndefined( r.rules[ key ] ) ) {
           throw "null or undefined rule in index: " + key;
         }
