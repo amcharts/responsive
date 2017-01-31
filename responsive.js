@@ -2,11 +2,11 @@
 Plugin Name: amCharts Responsive
 Description: This plugin add responsive functionality to JavaScript Charts and Maps.
 Author: Martynas Majeris, amCharts
-Contributors: Ohad Schneider
-Version: 1.0.3
+Contributors: Ohad Schneider, Hasan Akgün
+Version: 1.0.4
 Author URI: http://www.amcharts.com/
 
-Copyright 2015 amCharts
+Copyright 2015-2017 amCharts
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
