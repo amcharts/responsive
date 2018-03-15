@@ -2,7 +2,7 @@
 Plugin Name: amCharts Responsive
 Description: This plugin add responsive functionality to JavaScript Charts and Maps.
 Author: Martynas Majeris, amCharts
-Contributors: Ohad Schneider, Hasan Akgün
+Contributors: Ohad Schneider, Hasan Akgün, Ashish Singh
 Version: 1.0.5
 Author URI: http://www.amcharts.com/
 
@@ -41,6 +41,11 @@ AmCharts.addInitHandler( function( chart ) {
   r.ready = true;
   r.currentRules = {};
   r.overridden = [];
+  /**
+   * Resize timer duration - provision to collate multiple resize requests into a single redraw.
+   * To enable, provide a value greater than 0. This value is considered in milliseconds
+   */
+  r.resizeThresholdDuration = Number(r.resizeThresholdDuration) || 0;
 
   // preserve animation
   if ( chart.type === "stock" ) {
@@ -1114,7 +1119,7 @@ AmCharts.addInitHandler( function( chart ) {
       }
       delete r.startDuration;
     }
-  }
+  };
 
   var applyConfig = function( current, override ) {
 
@@ -1268,7 +1273,12 @@ AmCharts.addInitHandler( function( chart ) {
   //retain original zoomOutOnDataUpdate value
   overrideProperty( chart, "zoomOutOnDataUpdate", chart.zoomOutOnDataUpdate );
 
-  chart.addListener( "resized", checkRules );
-  chart.addListener( "init", checkRules );
+  var iResizeTimer;
+
+  chart.addListener( "resized", function(){
+    clearTimeout(iResizeTimer);
+    iResizeTimer = setTimeout(checkRules, r.resizeThresholdDuration);
+  });
+  chart.addListener( "init", checkRules);
 
 }, [ "pie", "serial", "xy", "funnel", "radar", "gauge", "gantt", "stock", "map" ] );

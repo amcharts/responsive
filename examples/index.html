@@ -9,72 +9,87 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
     <style>
     .ui-resizable-helper {
-        border: 1px dotted gray;
+      border: 1px dotted gray;
     }
     .resizable {
-        display: block;
-        width: 800px;
-        height: 500px;
-        padding: 0;
-        border: 2px solid #ddd;
-        overflow: hidden;
-        position: relative;
+      display: block;
+      width: 800px;
+      height: 500px;
+      padding: 0;
+      border: 2px solid #ddd;
+      overflow: hidden;
+      position: relative;
     }
     iframe {
-        width: 100%;
-        height: 100%;
+      width: 100%;
+      height: 100%;
     }
     #controls {
-        background: #ccc;
-        opacity: 0.5;
-        padding: 5px 8px;
-        font-size: 14px;
-        font-weight: bold;
-        font-family: Verdana;
-        margin-bottom: 10px;
+      background: #ccc;
+      opacity: 0.5;
+      padding: 5px 8px;
+      font-size: 14px;
+      font-weight: bold;
+      font-family: Verdana;
+      margin-bottom: 10px;
     }
     #dims {
-        background: #ddd;
-        color: #555;
-        padding: 5px 8px;
-        font-size: 14px;
-        font-family: Verdana;
-        width: 100px;
-        text-align: center;
+      background: #ddd;
+      color: #555;
+      padding: 5px 8px;
+      font-size: 14px;
+      font-family: Verdana;
+      width: 100px;
+      text-align: center;
     }
     .ui-resizable-se {
-        display: none!important;
+      display: none!important;
     }
     </style>
 
     <script>
-    $(function () {
+
+      $(function () {
+        bindResizable(true);
+      });
+
+      function bindResizable(bAnimationEnabled) {
         $(".resizable").resizable({
-            animate: true,
-            animateEasing: 'swing',
-            animateDuration: 250,
-            resize: function( event, ui ) {
-                $('#dims').html(ui.size.width+'x'+ui.size.height+'px');
-            }
+          animate: bAnimationEnabled,
+          animateEasing: 'swing',
+          animateDuration: 250,
+          resize: function( event, ui ) {
+            $('#dims').html(ui.size.width+'x'+ui.size.height+'px');
+          }
         });
-    });
+      }
 
-    function setType (type) {
+      function setType (type) {
         $('#iframe').attr('src', type);
-    }
+      }
 
-    function reload() {
-        setType($('#type').val());
-    }
+      function reload() {
+        var sFileName = $('#type').val(),
+        // if it is a resizeThresholdDuration example, disable animation
+        bAnimationEnabled = ['serial1ResizeThreshold.html'].indexOf(sFileName) === -1;
 
-    function resize( dim, dir) {
+        // disable resizable
+        $(".resizable").resizable('destroy');
+
+        bindResizable(bAnimationEnabled);
+        
+        setType(sFileName);
+      }
+
+      function resize( dim, dir) {
         var container = $('.resizable');
-        if ( 'w' == dim )
-            container.css({ 'width': container.width() + dir});
-        else
-            container.css({ 'height': container.height() + dir});
+        if ( 'w' == dim ){
+          container.css({ 'width': container.width() + dir});
+        }else{
+          container.css({ 'height': container.height() + dir});
+        }
         $('#dims').html(container.width()+'x'+container.height()+'px');
-    }
+      }
     </script>
 
   </head>
@@ -85,11 +100,12 @@
       <input type="button" value="w+" onclick="resize('w', 50);" />
       <input type="button" value="h-" onclick="resize('h', -50);" />
       <input type="button" value="h+" onclick="resize('h', 50);" />
-      <select id="type" onchange="setType(this.options[this.selectedIndex].value);">
+      <select id="type" onchange="reload();">
         <option value="pie1.html" selected="selected">Pie #1 (Simple w/ legend)</option>
         <option value="pie2.html"/>Pie #2 (3D w/ legend)</option>
         <option value="pie3.html"/>Pie #3 (several instances)</option>
         <option value="serial1.html">Serial #1 (Area)</option>
+        <option value="serial1ResizeThreshold.html">Serial #1 (Area) with resizeThresholdDuration enabled</option>
         <option value="serial2.html">Serial #2 (Bar &amp; Line)</option>
         <option value="serial3.html">Serial #3 (Line w/ zoom)</option>
         <option value="xy.html">XY</option>

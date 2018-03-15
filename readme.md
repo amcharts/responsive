@@ -1,6 +1,6 @@
 # amCharts Responsive
 
-Version: 1.0.5
+Version: 1.1
 
 
 ## Description
@@ -61,6 +61,17 @@ That's it.
 
 
 ## Advanced use
+
+### Control Chart redrawing on resize
+
+You can control chart redraw requests on resize using `resizeThresholdDuration` property. By default, it is 0 milliseconds.
+
+```
+chart.responsive = {
+  "enabled": true,
+  "resizeThresholdDuration": 250  // in milliseconds
+};
+```
 
 ### Rules
 
@@ -340,6 +351,9 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 
 ## Changelog
+
+### 1.1
+* Added support for `resizeThresholdDuration` property to control chart redraw requests on resize.
 
 ### 1.0.5
 * Fixed an issue where Responsive plugin was disabling initial animations.
